@@ -32,7 +32,6 @@ var video = {
         data = data.replace(/var[\ ]*ytInitialPlayerResponse[\ ]*\=[\ ]*/g,"").replace("\\\\\"","\\\"").replaceAll(";","");
         data = JSON.parse(data);
         return data;
-        return 
     },
     solve_signature_cipher_url: (url) => {
         splitted_url = new URLSearchParams(url);
