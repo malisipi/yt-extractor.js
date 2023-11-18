@@ -6,7 +6,8 @@ const parser = new xml_parser.XMLParser({
 
 var channel = {
     get_channel: async channel_id => {
-        return await utils.extract_json_data_from_page("https://www.youtube.com/channel/" + encodeURIComponent(channel_id), "ytInitialData")
+        let page = await utils.get_text(`https://www.youtube.com/channel/${encodeURIComponent(channel_id)}`);
+        return utils.extract_json_data_from_page(page, "ytInitialData");
     },
     get_channel_videos: async channel_id => {
         let rss = await (await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channel_id)}`)).text()

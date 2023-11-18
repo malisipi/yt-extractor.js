@@ -28,7 +28,16 @@ var video = {
         return encoded_signature;
     },
     get_video: async (video_id) => {
-        return await utils.extract_json_data_from_page("https://www.youtube.com/watch?v=" + encodeURIComponent(video_id), "ytInitialPlayerResponse");
+        let page = await utils.get_text(`https://www.youtube.com/watch?v=${encodeURIComponent(video_id)}`);
+        let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
+        let data = utils.extract_json_data_from_page(page, "ytInitialData");
+        return {
+            player: player,
+            data: data
+        };
+        // Next Videos: @.data.contents.twoColumnWatchNextResults.secondaryResults.secondaryResults.results
+        // Cards: @.data.cards
+        // Captions: @.player.captions.playerCaptionsTracklistRenderer.captionTracks
     },
     solve_signature_cipher_url: (url) => {
         splitted_url = new URLSearchParams(url);
