@@ -4,7 +4,7 @@
   - [x] Videos `(?)`
   - [ ] Channels
   - [ ] Playlists
-- [x] Videos
+- [x] Videos `(?)`
   - [x] Unencrypted videos
   - [x] Encrypted videos (Public videos but has signatureCipher instead of pure uri)
   - [x] Live streams `(?)`
@@ -16,6 +16,7 @@
   - [x] Published Videos
   - [ ] Community
   - [ ] Playlists
+- [x] Trends `(?)`
 - [ ] Playlists
 - [ ] Refactor all code & Ship stable API
 - [ ] And more..
