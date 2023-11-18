@@ -1,4 +1,5 @@
 const vm = require("vm");
+const utils = require("./utils");
 
 var video = {
     __signature_cipher: null,
@@ -27,11 +28,7 @@ var video = {
         return encoded_signature;
     },
     get_video: async (video_id) => {
-        let watch_page = await (await fetch("https://www.youtube.com/watch?v=" + encodeURIComponent(video_id))).text();
-        data = watch_page.split(/\<[\/]*script[^\>]*\>/g).filter(a=>a.startsWith("var ytInitialPlayerResponse"))[0];
-        data = data.replace(/var[\ ]*ytInitialPlayerResponse[\ ]*\=[\ ]*/g,"").replace("\\\\\"","\\\"").replaceAll(";","");
-        data = JSON.parse(data);
-        return data;
+        return await utils.extract_json_data_from_page("https://www.youtube.com/watch?v=" + encodeURIComponent(video_id), "ytInitialPlayerResponse");
     },
     solve_signature_cipher_url: (url) => {
         splitted_url = new URLSearchParams(url);
