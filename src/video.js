@@ -42,7 +42,7 @@ var video = {
             dash: player.streamingData.dashManifestUrl,
             description: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.attributedDescription.content,
             length: Number(player.microformat.playerMicroformatRenderer.lengthSeconds),
-            hls: nullplayer.streamingData.hlsManifestUrl,
+            hls: player.streamingData.hlsManifestUrl,
             likes: Number(data.contents.twoColumnWatchNextResults.results.results.contents[0].videoPrimaryInfoRenderer.videoActions.menuRenderer.topLevelButtons[0].segmentedLikeDislikeButtonRenderer.likeButton.toggleButtonRenderer.accessibility.label.replace(/[\.\,]/g,"").match(/[0-9]+/g)[0]), // where's the data
             isFamilySafe: player.microformat.playerMicroformatRenderer.isFamilySafe,
             isUnlisted: player.microformat.playerMicroformatRenderer.isUnlisted,
