@@ -7,11 +7,12 @@
 - [x] Videos `(?)`
   - [x] Unencrypted videos
   - [x] Encrypted videos (Public videos but has signatureCipher instead of pure uri)
-  - [x] Live streams `(?)`
+  - [x] Live streams
   - [x] Captions `(?)`
   - [x] Next Videos `(?)`
   - [x] Cards `(?)`
-  - [ ] ~~Comments~~ (Hard to parse, Maybe in future)
+  - [x] Comments `(?)` (Still needs some improvements to work at all)
+  - [ ] Live Chat
 - [x] Channels `(?)`
   - [x] Published Videos
   - [ ] Community

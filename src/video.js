@@ -40,10 +40,10 @@ var video = {
             videoStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? null,
             relatedStreams: player?.streamingData?.formats ?? null,
             dash: player?.streamingData?.dashManifestUrl ?? null,
-            description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
+            description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
             hls: player.streamingData.hlsManifestUrl ?? null,
-            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons[0]?.segmentedLikeDislikeButtonRenderer?.likeButton?.toggleButtonRenderer?.accessibility?.label?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
+            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonRenderer?.likeButton?.toggleButtonRenderer?.accessibility?.label?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
             isFamilySafe: player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true,
             isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
             isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
@@ -56,13 +56,43 @@ var video = {
             category: player?.microformat?.playerMicroformatRenderer?.category ?? null,
             owner: {
                 name: player?.videoDetails?.author ?? "",
-                thumbnails: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.thumbnail?.thumbnails || [],
-                verified: (data?.contents?.twoColumnWatchNextResults?.results?.results?.contents[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
-                channel_id: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
+                thumbnails: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.thumbnail?.thumbnails || [],
+                verified: (data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
+                channelId: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
                 profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null
             },
             cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
-            nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? []
+            nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? [],
+            commentsToken: data.contents.twoColumnWatchNextResults.results.results.contents?.[3].itemSectionRenderer.contents?.[0].continuationItemRenderer.continuationEndpoint.continuationCommand.token
+        });
+    },
+    get_comments: async (commentsToken) => {
+        let response = await utils.get_json("https://www.youtube.com/youtubei/v1/next?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false", {
+            method: "POST",
+            body: `{"context":{"client":{"clientName":"WEB","clientVersion":"2.20231117.01.04","platform":"DESKTOP"},"user":{},"request":{"useSsl":true}},"continuation":"${commentsToken}"}`
+        });
+
+        return ({
+            disabled: false,
+            comments: response.onResponseReceivedEndpoints[1].reloadContinuationItemsCommand.continuationItems.filter(a=>a.commentThreadRenderer!=undefined).map(a=>a.commentThreadRenderer).map(comment => ({
+                id: comment?.comment?.commentRenderer?.commentId ?? null,
+                text: comment?.comment?.commentRenderer?.contentText?.runs?.[0]?.text ?? "",
+                time: comment?.comment?.commentRenderer?.publishedTimeText?.runs?.[0]?.text ?? "", // it need to be converted into time
+                isEdited: (comment?.comment?.commentRenderer?.publishedTimeText?.runs?.[0]?.text?.match(/\([a-zA-Z]+\)/g)?.length ?? 0) > 0,
+                replies: {
+                    count: comment?.comment?.commentRenderer?.replyCount ?? 0,
+                    nextPage: comment?.replies?.commentRepliesRenderer?.contents?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
+                },
+                likeCount: Number(comment?.comment?.commentRenderer?.voteCount?.simpleText ?? 0),
+                author: {
+                    name: comment?.comment?.commentRenderer?.authorText?.simpleText ?? "", // yt is not providing real name (even you can see the issue in yt's comment section)
+                    isChannelOwner: comment?.comment?.commentRenderer?.authorIsChannelOwner ?? false,
+                    thumbnails: comment?.comment?.commentRenderer?.authorThumbnail?.thumbnails ?? [],
+                    channelId: comment?.comment?.commentRenderer?.authorEndpoint?.browseEndpoint?.browseId ?? null,
+                    profile: comment?.comment?.commentRenderer?.authorText?.simpleText ?? null
+                }
+            })),
+            nextpage: response?.onResponseReceivedEndpoints?.[1]?.reloadContinuationItemsCommand?.continuationItems?.filter(a=>a.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
         });
     }
 };
