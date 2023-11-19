@@ -36,33 +36,33 @@ var video = {
         let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
         let data = utils.extract_json_data_from_page(page, "ytInitialData");
         return ({
-            audioStreams: player.streamingData.adaptiveFormats.filter(a=>a.mimeType.includes("audio")),
-            videoStreams: player.streamingData.adaptiveFormats.filter(a=>a.mimeType.includes("video")),
-            relatedStreams: player.streamingData.formats,
-            dash: player.streamingData.dashManifestUrl,
-            description: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.attributedDescription.content,
-            length: Number(player.microformat.playerMicroformatRenderer.lengthSeconds),
-            hls: player.streamingData.hlsManifestUrl,
-            likes: Number(data.contents.twoColumnWatchNextResults.results.results.contents[0].videoPrimaryInfoRenderer.videoActions.menuRenderer.topLevelButtons[0].segmentedLikeDislikeButtonRenderer.likeButton.toggleButtonRenderer.accessibility.label.replace(/[\.\,]/g,"").match(/[0-9]+/g)[0]), // where's the data
-            isFamilySafe: player.microformat.playerMicroformatRenderer.isFamilySafe,
-            isUnlisted: player.microformat.playerMicroformatRenderer.isUnlisted,
-            isLiveNow: player.microformat.playerMicroformatRenderer.liveBroadcastDetails.isLiveNow,
-            isPrivate: player.videoDetails.isPrivate,
-            keywords: player.videoDetails.keywords,
-            captions: player.captions.playerCaptionsTracklistRenderer.captionTracks,
-            thumbnails: player.videoDetails.thumbnail.thumbnails,
-            title: player.microformat.playerMicroformatRenderer.title.simpleText,
-            views: Number(player.microformat.playerMicroformatRenderer.viewCount),
-            category: player.microformat.playerMicroformatRenderer.category,
+            audioStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? null,
+            videoStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? null,
+            relatedStreams: player?.streamingData?.formats ?? null,
+            dash: player?.streamingData?.dashManifestUrl ?? null,
+            description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
+            length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
+            hls: player.streamingData.hlsManifestUrl ?? null,
+            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons[0]?.segmentedLikeDislikeButtonRenderer?.likeButton?.toggleButtonRenderer?.accessibility?.label?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
+            isFamilySafe: player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true,
+            isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
+            isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
+            isPrivate: player?.videoDetails?.isPrivate ?? false,
+            keywords: player?.videoDetails?.keywords ?? [],
+            captions: player?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? null,
+            thumbnails: player?.videoDetails?.thumbnail?.thumbnails ?? [],
+            title: player?.microformat?.playerMicroformatRenderer?.title?.simpleText ?? "",
+            views: Number(player?.microformat?.playerMicroformatRenderer?.viewCount ?? 0),
+            category: player?.microformat?.playerMicroformatRenderer?.category ?? null,
             owner: {
-                name: player.videoDetails.author,
-                thumbnails: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.owner.videoOwnerRenderer.thumbnail.thumbnails,
-                verified: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.owner.videoOwnerRenderer.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length > 0,
-                channel_id: player.microformat.playerMicroformatRenderer.externalChannelId,
-                profile: player.microformat.playerMicroformatRenderer.ownerProfileUrl
+                name: player?.videoDetails?.author ?? "",
+                thumbnails: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.thumbnail?.thumbnails || [],
+                verified: (data?.contents?.twoColumnWatchNextResults?.results?.results?.contents[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
+                channel_id: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
+                profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null
             },
-            cards: data.cards.cardCollectionRenderer.cards,
-            nextVideos: data.contents.twoColumnWatchNextResults.secondaryResults.secondaryResults.results
+            cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
+            nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? []
         });
     }
 };
