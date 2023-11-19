@@ -72,9 +72,14 @@ var video = {
             body: `{"context":{"client":{"clientName":"WEB","clientVersion":"2.20231117.01.04","platform":"DESKTOP"},"user":{},"request":{"useSsl":true}},"continuation":"${commentsToken}"}`
         });
 
+        let continuationItems = (
+            response?.onResponseReceivedEndpoints?.filter(a=>a?.reloadContinuationItemsCommand?.slot == "RELOAD_CONTINUATION_SLOT_BODY")?.[0]?.reloadContinuationItemsCommand?.continuationItems||
+            response?.onResponseReceivedEndpoints?.[0]?.appendContinuationItemsAction?.continuationItems
+        );
+
         return ({
             disabled: false,
-            comments: response.onResponseReceivedEndpoints[1].reloadContinuationItemsCommand.continuationItems.filter(a=>a.commentThreadRenderer!=undefined).map(a=>a.commentThreadRenderer).map(comment => ({
+            comments: continuationItems?.filter(a => a?.commentThreadRenderer != undefined).map(a => a?.commentThreadRenderer).map(comment => ({
                 id: comment?.comment?.commentRenderer?.commentId ?? null,
                 text: comment?.comment?.commentRenderer?.contentText?.runs?.[0]?.text ?? "",
                 time: comment?.comment?.commentRenderer?.publishedTimeText?.runs?.[0]?.text ?? "", // it need to be converted into time
@@ -92,7 +97,7 @@ var video = {
                     profile: comment?.comment?.commentRenderer?.authorText?.simpleText ?? null
                 }
             })),
-            nextpage: response?.onResponseReceivedEndpoints?.[1]?.reloadContinuationItemsCommand?.continuationItems?.filter(a=>a.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
+            nextpage: continuationItems?.filter(a=>a.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
         });
     }
 };
