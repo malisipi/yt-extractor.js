@@ -27,21 +27,43 @@ var video = {
         encoded_signature = encodeURIComponent(solved_signature);
         return encoded_signature;
     },
+    solve_signature_cipher_url: (url) => {
+        splitted_url = new URLSearchParams(url);
+        return decodeURIComponent(splitted_url.get("url")) + "&sig=" + video.solve_signature_cipher(splitted_url.get("s"));
+    },
     get_video: async (video_id) => {
         let page = await utils.get_text(`https://www.youtube.com/watch?v=${encodeURIComponent(video_id)}`);
         let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
         let data = utils.extract_json_data_from_page(page, "ytInitialData");
-        return {
-            player: player,
-            data: data
-        };
-        // Next Videos: @.data.contents.twoColumnWatchNextResults.secondaryResults.secondaryResults.results
-        // Cards: @.data.cards
-        // Captions: @.player.captions.playerCaptionsTracklistRenderer.captionTracks
-    },
-    solve_signature_cipher_url: (url) => {
-        splitted_url = new URLSearchParams(url);
-        return decodeURIComponent(splitted_url.get("url")) + "&sig=" + video.solve_signature_cipher(splitted_url.get("s"));
+        return ({
+            audioStreams: player.streamingData.adaptiveFormats.filter(a=>a.mimeType.includes("audio")),
+            videoStreams: player.streamingData.adaptiveFormats.filter(a=>a.mimeType.includes("video")),
+            relatedStreams: player.streamingData.formats,
+            dash: player.streamingData.dashManifestUrl,
+            description: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.attributedDescription.content,
+            length: Number(player.microformat.playerMicroformatRenderer.lengthSeconds),
+            hls: nullplayer.streamingData.hlsManifestUrl,
+            likes: Number(data.contents.twoColumnWatchNextResults.results.results.contents[0].videoPrimaryInfoRenderer.videoActions.menuRenderer.topLevelButtons[0].segmentedLikeDislikeButtonRenderer.likeButton.toggleButtonRenderer.accessibility.label.replace(/[\.\,]/g,"").match(/[0-9]+/g)[0]), // where's the data
+            isFamilySafe: player.microformat.playerMicroformatRenderer.isFamilySafe,
+            isUnlisted: player.microformat.playerMicroformatRenderer.isUnlisted,
+            isLiveNow: player.microformat.playerMicroformatRenderer.liveBroadcastDetails.isLiveNow,
+            isPrivate: player.videoDetails.isPrivate,
+            keywords: player.videoDetails.keywords,
+            captions: player.captions.playerCaptionsTracklistRenderer.captionTracks,
+            thumbnails: player.videoDetails.thumbnail.thumbnails,
+            title: player.microformat.playerMicroformatRenderer.title.simpleText,
+            views: Number(player.microformat.playerMicroformatRenderer.viewCount),
+            category: player.microformat.playerMicroformatRenderer.category,
+            owner: {
+                name: player.videoDetails.author,
+                thumbnails: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.owner.videoOwnerRenderer.thumbnail.thumbnails,
+                verified: data.contents.twoColumnWatchNextResults.results.results.contents[1].videoSecondaryInfoRenderer.owner.videoOwnerRenderer.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length > 0,
+                channel_id: player.microformat.playerMicroformatRenderer.externalChannelId,
+                profile: player.microformat.playerMicroformatRenderer.ownerProfileUrl
+            },
+            cards: data.cards.cardCollectionRenderer.cards,
+            nextVideos: data.contents.twoColumnWatchNextResults.secondaryResults.secondaryResults.results
+        });
     }
 };
 

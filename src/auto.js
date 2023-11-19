@@ -7,8 +7,8 @@ auto.extract_stream_url = async (video_id) => {
     if(auto.video.__signature_cipher == null)
         await auto.video.extract_signature_cipher_algorithm();
     
-    let video = (await auto.video.get_video(video_id)).player;
-    let url = video.streamingData.formats.at(-1).url || auto.video.solve_signature_cipher_url(video.streamingData.formats.at(-1).signatureCipher);
+    let video = (await auto.video.get_video(video_id));
+    let url = video.relatedStreams.at(-1).url || auto.video.solve_signature_cipher_url(video.relatedStreams.at(-1).signatureCipher);
     return url;
 }
 
