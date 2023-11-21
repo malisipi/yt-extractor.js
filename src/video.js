@@ -31,10 +31,31 @@ var video = {
         splitted_url = new URLSearchParams(url);
         return decodeURIComponent(splitted_url.get("url")) + "&sig=" + video.solve_signature_cipher(splitted_url.get("s"));
     },
+    __get_video_info_without_age_restriction: async (video_id) => {
+        let player = await utils.get_json(`https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false`, {
+            method: "POST",
+            body: `{"context":{"client":{"clientName":"TVHTML5_SIMPLY_EMBEDDED_PLAYER","clientVersion":"2.0","clientScreen":"WATCH","hl":"en"},"thirdParty":{"embedUrl":"https://www.youtube.com/"}},"playbackContext":{"contentPlaybackContext":{}},"videoId":"${video_id}","startTimeSecs":0,"racyCheckOk":true,"contentCheckOk":true}`
+        }, {
+            "Authority": "www.youtube.com",
+            "Accept": "*/*",
+            "Accept-Language": "en-US,en;q=0.5",
+            "Cache-Control": "no-cache",
+            "Content-Type": "text/plain;charset=UTF-8",
+            "Origin": "https://www.youtube.com",
+            "Pragma": "no-cache"
+        });
+
+        return player;
+    },
     get_video: async (video_id) => {
         let page = await utils.get_text(`https://www.youtube.com/watch?v=${encodeURIComponent(video_id)}`);
         let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
         let data = utils.extract_json_data_from_page(page, "ytInitialData");
+
+        if(player?.playabilityStatus?.desktopLegacyAgeGateReason){ // Age-Restricted Videos
+            player = await video.__get_video_info_without_age_restriction(video_id);
+        };
+
         return ({
             audioStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? null,
             videoStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? null,
@@ -42,7 +63,7 @@ var video = {
             dash: player?.streamingData?.dashManifestUrl ?? null,
             description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
-            hls: player.streamingData.hlsManifestUrl ?? null,
+            hls: player?.streamingData?.hlsManifestUrl ?? null,
             likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonRenderer?.likeButton?.toggleButtonRenderer?.accessibility?.label?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
             isFamilySafe: player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true,
             isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
