@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Search
+- [x] Search `(?)`
   - [x] Videos `(?)`
   - [ ] Channels
   - [ ] Playlists
@@ -19,7 +19,7 @@
   - [ ] Community
   - [ ] Playlists
 - [x] Trends `(?)`
-- [ ] Playlists
+- [x] Playlists `(?)`
 - [ ] Refactor all code & Ship stable API
 - [ ] And more..
 

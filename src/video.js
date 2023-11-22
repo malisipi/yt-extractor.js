@@ -84,7 +84,7 @@ var video = {
             },
             cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
             nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? [],
-            commentsToken: data.contents.twoColumnWatchNextResults.results.results.contents?.[3].itemSectionRenderer.contents?.[0].continuationItemRenderer.continuationEndpoint.continuationCommand.token
+            commentsToken: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[3]?.itemSectionRenderer?.contents?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
         });
     },
     get_comments: async (commentsToken) => {
