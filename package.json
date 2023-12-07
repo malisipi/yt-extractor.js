@@ -1,4 +1,22 @@
 {
+  "name": "yt-extractor",
+  "description": "Some drafts about YT",
+  "version": "1.0.0",
+  "main": "./src/index.js",
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/malisipi/yt-extractor.js.git"
+  },
+  "author": "malisipi",
+  "license": "Apache-2.0",
+  "bugs": {
+    "url": "https://github.com/malisipi/yt-extractor.js/issues"
+  },
+  "homepage": "https://github.com/malisipi/yt-extractor.js#readme",
   "dependencies": {
     "fast-xml-parser": "^4.3.2"
   }

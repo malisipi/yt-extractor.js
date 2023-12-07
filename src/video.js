@@ -83,7 +83,19 @@ var video = {
                 profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null
             },
             cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
-            nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results ?? [],
+            nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.compactVideoRenderer!=undefined).map(a=>a?.compactVideoRenderer).map(video => ({
+            id: video.videoId,
+            title: video.title.simpleText,
+            thumbnails: video.thumbnail.thumbnails,
+            views: Number(video.title.accessibility.accessibilityData.label.match(/[0-9\.\,\ ]+view/g)[0].replace(/[A-Za-z\ \.\,]+/g, "")),
+            length: Number(video.lengthSeconds),
+            owner: {
+                name: video.shortBylineText.runs[0].text,
+                verified: (video.ownerBadges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
+                channelId: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
+            },
+        })) ?? [],
+            nextVideosToken: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null,
             commentsToken: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[3]?.itemSectionRenderer?.contents?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
         });
     },
