@@ -13,6 +13,7 @@
   - [x] Cards `(?)`
   - [x] Comments `(?)` (Still needs some improvements to work at all)
   - [x] Age-Restricted Videos
+  - [x] Improve downloads speeds (with `n` parameter)
   - [ ] Live Chat
 - [x] Channels `(?)`
   - [x] Published Videos

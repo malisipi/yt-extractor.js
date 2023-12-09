@@ -9,7 +9,7 @@ var utils = {
         "X-Origin": "https://www.youtube.com",
         "X-Youtube-Bootstrap-Logged-In": "false",
         "X-Youtube-Client-Name": "1",
-        "X-Youtube-Client-Version": "2.20231117.01.04"
+        "X-Youtube-Client-Version": "2.20231208.01.00",
     },
     get_text: async (page, fetch_params = {}, headers=utils.__default_headers) => {
         fetch_params.headers = headers;

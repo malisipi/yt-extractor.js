@@ -2,8 +2,10 @@ const vm = require("vm");
 const utils = require("./utils");
 
 var video = {
+    is_extracted: false,
     __signature_cipher: null,
-    extract_signature_cipher_algorithm: async () => {
+    __n_param_algorithm: null,
+    extract_youtube_algorithm: async () => {
         let youtube_main_page = await (await fetch("https://www.youtube.com/")).text();
         basejs = await (await fetch("https://www.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
     
@@ -14,8 +16,10 @@ var video = {
         signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[4][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
+        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9]+\)\{var[\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\/\>\<\|\*\?\\]+\_except\_[a-zA-Z0-9\-\_\"\+\}]+[\sA-Za-z]+\.join\(\"\"\)\}/g)[0].slice(1);
 
         video.__signature_cipher = signature_cipher;
+        video.is_extracted = true;
     },
     __run_signature_cipher_algotithm: (signature) => {
         let context = `${video.__signature_cipher.core_decoder_helper};${video.__signature_cipher.core_decoder};${video.__signature_cipher.main_decoder_name}("${signature}");`
@@ -29,7 +33,17 @@ var video = {
     },
     solve_signature_cipher_url: (url) => {
         splitted_url = new URLSearchParams(url);
-        return decodeURIComponent(splitted_url.get("url")) + "&sig=" + video.solve_signature_cipher(splitted_url.get("s"));
+        return decodeURIComponent(splitted_url.get("url")) + "&alr=yes&sig=" + video.solve_signature_cipher(splitted_url.get("s"));
+    },
+    solve_n_param: (url) => {
+        let the_url = new URL(url);
+        let n_param = the_url.searchParams.get("n");
+        if(n_param != null) {
+            let context = `(${video.__n_param_algorithm})("${n_param}");`
+            let the_result = vm.runInNewContext(context);
+            the_url.searchParams.set("n", the_result);
+        }
+        return the_url.href;
     },
     __get_video_info_without_age_restriction: async (video_id) => {
         let player = await utils.get_json(`https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false`, {
@@ -64,7 +78,7 @@ var video = {
             description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
             hls: player?.streamingData?.hlsManifestUrl ?? null,
-            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonRenderer?.likeButton?.toggleButtonRenderer?.accessibility?.label?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
+            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonViewModel?.likeButtonViewModel?.likeButtonViewModel?.toggleButtonViewModel?.toggleButtonViewModel?.defaultButtonViewModel?.buttonViewModel?.accessibilityText?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
             isFamilySafe: player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true,
             isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
             isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
@@ -80,7 +94,8 @@ var video = {
                 thumbnails: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.thumbnail?.thumbnails || [],
                 verified: (data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
                 channelId: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
-                profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null
+                profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null,
+                followers: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer.owner?.videoOwnerRenderer?.subscriberCountText?.simpleText?.match(/[0-9a-zA-Z]+/g)?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1)
             },
             cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
             nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.compactVideoRenderer!=undefined).map(a=>a?.compactVideoRenderer).map(video => ({

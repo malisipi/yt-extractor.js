@@ -4,8 +4,8 @@ var auto = {
 };
 
 auto.extract_stream_url = async (video_id) => {
-    if(auto.video.__signature_cipher == null)
-        await auto.video.extract_signature_cipher_algorithm();
+    if(!auto.video.is_extracted)
+        await auto.video.extract_youtube_algorithm();
     
     let video = (await auto.video.get_video(video_id));
     let url = video.relatedStreams.at(-1).url || auto.video.solve_signature_cipher_url(video.relatedStreams.at(-1).signatureCipher);
