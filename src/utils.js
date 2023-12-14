@@ -20,7 +20,7 @@ var utils = {
     },
     extract_json_data_from_page: (page, script_variable) => {
         let data = page.split(/\<[\/]*script[^\>]*\>/g).filter(a=>a.startsWith(`var ${script_variable}`))[0];
-        data = data.replace(RegExp(`var[\\ ]*${script_variable}[\\ ]*\=[\\ ]*`),"").replace("\\\\\"","\\\"").replaceAll(";","");
+        data = data.replace(RegExp(`var[\\ ]*${script_variable}[\\ ]*\=[\\ ]*`),"").replaceAll(";","");
         data = data.match(/\{.+\}/)[0];
         data = JSON.parse(data);
         return data;
