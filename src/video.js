@@ -78,7 +78,7 @@ var video = {
             description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
             hls: player?.streamingData?.hlsManifestUrl ?? null,
-            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonViewModel?.likeButtonViewModel?.likeButtonViewModel?.toggleButtonViewModel?.toggleButtonViewModel?.defaultButtonViewModel?.buttonViewModel?.accessibilityText?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)[0] ?? 0),
+            likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonViewModel?.likeButtonViewModel?.likeButtonViewModel?.toggleButtonViewModel?.toggleButtonViewModel?.defaultButtonViewModel?.buttonViewModel?.accessibilityText?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)?.[0] ?? 0),
             isFamilySafe: player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true,
             isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
             isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
