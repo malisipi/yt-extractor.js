@@ -8,7 +8,7 @@ var video = {
     extract_youtube_algorithm: async () => {
         let youtube_main_page = await (await fetch("https://www.youtube.com/")).text();
         basejs = await (await fetch("https://www.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
-    
+
         let signature_cipher = {};
 
         signature_cipher.main_decoder = basejs.split("\n").filter(a => a.includes("alr") && a.includes("encodeURIComponent") && a.includes("decodeURIComponent"))[0];
@@ -16,7 +16,7 @@ var video = {
         signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[4][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
-        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9]+\)\{var[\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\/\>\<\|\*\?\\]+\_except\_[a-zA-Z0-9\-\_\"\+\}]+[\sA-Za-z]+\.join\(\"\"\)\}/g)[0].slice(1);
+        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9]+\)\{var[\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\/\>\<\|\*\?\\]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z]+\.join\(\"\"\)\}/g)[0].slice(1);
 
         video.__signature_cipher = signature_cipher;
         video.is_extracted = true;
