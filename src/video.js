@@ -26,9 +26,9 @@ var video = {
         return vm.runInNewContext(context);
     },
     solve_signature_cipher: (signature) => {
-        decoded_signature = decodeURIComponent(signature);
-        solved_signature = video.__run_signature_cipher_algotithm(decoded_signature);
-        encoded_signature = encodeURIComponent(solved_signature);
+        let decoded_signature = decodeURIComponent(signature);
+        let solved_signature = video.__run_signature_cipher_algotithm(decoded_signature);
+        let encoded_signature = encodeURIComponent(solved_signature);
         return encoded_signature;
     },
     solve_signature_cipher_url: (url) => {
@@ -95,7 +95,7 @@ var video = {
                 verified: (data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
                 channelId: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
                 profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null,
-                followers: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer.owner?.videoOwnerRenderer?.subscriberCountText?.simpleText?.match(/[0-9a-zA-Z]+/g)?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1)
+                followers: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer.owner?.videoOwnerRenderer?.subscriberCountText?.simpleText?.match(/[0-9a-zA-Z\.]+/g)?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1)
             },
             cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
             nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.compactVideoRenderer!=undefined).map(a=>a?.compactVideoRenderer).map(video => ({
