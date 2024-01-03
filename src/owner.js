@@ -4,20 +4,26 @@ const parser = new xml_parser.XMLParser({
     ignoreAttributes : false
 })
 
-var channel = {
-    get_channel: async channel_id => {
+var owner = {
+    get_owner: async channel_id => {
         let page = await utils.get_text(`https://www.youtube.com/channel/${encodeURIComponent(channel_id)}`);
         return utils.extract_json_data_from_page(page, "ytInitialData");
     },
-    get_channel_videos: async channel_id => {
+    get_owner_videos: async channel_id => {
         let rss = await (await fetch(`https://www.youtube.com/feeds/videos.xml?channel_id=${encodeURIComponent(channel_id)}`)).text()
         let feed = parser.parse(rss).feed;
 
         return ({
-            "author": feed.author,
+            "owner": {
+                name: feed.author.name,
+                id: feed.author.uri.split("/").at(-1)
+            },
             "entry": feed.entry.map(video => ({
                 id: video["yt:videoId"],
-                channel_id: video["yt:channelId"],
+                owner: {
+                    name: feed.author.name,
+                    id: video["yt:channelId"]
+                },
                 title: video.title,
                 thumbnail: {
                     url: video["media:group"]["media:thumbnail"]["@_url"],
@@ -33,4 +39,4 @@ var channel = {
     }
 };
 
-module.exports = channel;
+module.exports = owner;

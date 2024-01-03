@@ -11,11 +11,11 @@ var trends = {
                 title: video.title.runs[0].text,
                 thumbnails: video.thumbnail.thumbnails,
                 views: Number(video.title.accessibility.accessibilityData.label.match(/[0-9\.\,\ ]+view/g)[0].replace(/[A-Za-z\ \.\,]+/g, "")),
-                length: Number(video.lengthSeconds),
+                length: utils.extract_time_from_text(video?.lengthText?.simpleText) ?? null,
                 owner: {
                     name: video.shortBylineText.runs[0].text,
                     verified: (video.ownerBadges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
-                    channelId: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
+                    id: videos?.shortBylineText?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId ?? null
                 },
             })),
             nextPage: data.contents

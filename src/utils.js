@@ -18,6 +18,9 @@ var utils = {
     get_json: async (page, fetch_params = {}) => {
         return JSON.parse(await utils.get_text(page, fetch_params));
     },
+    extract_time_from_text: (time) => {
+        return time?.split(":")?.toReversed()?.reduce((total,next,index)=>{return total+next*[1,60,60*60][index]},0);
+    },
     extract_json_data_from_page: (page, script_variable) => {
         let data = page.split(/\<[\/]*script[^\>]*\>/g).filter(a=>a.startsWith(`var ${script_variable}`))[0];
         data = data.replace(RegExp(`var[\\ ]*${script_variable}[\\ ]*\=[\\ ]*`),"").replaceAll(";","");

@@ -14,7 +14,7 @@ var playlist = {
             length: Number(video.lengthSeconds),
             owner: {
                 name: video.shortBylineText.runs[0].text,
-                channelId: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
+                id: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
             },
         }))
     }

@@ -66,34 +66,38 @@ var video = {
         let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
         let data = utils.extract_json_data_from_page(page, "ytInitialData");
 
+        let is_family_safe = player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true;
+        let title = player?.microformat?.playerMicroformatRenderer?.title?.simpleText ?? "";
+        let thumbnails = player?.videoDetails?.thumbnail?.thumbnails ?? [];
         if(player?.playabilityStatus?.desktopLegacyAgeGateReason){ // Age-Restricted Videos
+            is_family_safe = false;
             player = await video.__get_video_info_without_age_restriction(video_id);
         };
 
         return ({
-            audioStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? null,
-            videoStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? null,
-            relatedStreams: player?.streamingData?.formats ?? null,
+            audioStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? [],
+            videoStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? [],
+            relatedStreams: player?.streamingData?.formats ?? [],
             dash: player?.streamingData?.dashManifestUrl ?? null,
             description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
             hls: player?.streamingData?.hlsManifestUrl ?? null,
             likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonViewModel?.likeButtonViewModel?.likeButtonViewModel?.toggleButtonViewModel?.toggleButtonViewModel?.defaultButtonViewModel?.buttonViewModel?.accessibilityText?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)?.[0] ?? 0),
-            isFamilySafe: player?.microformat?.playerMicroformatRenderer?.isFamilySafe ?? true,
+            isFamilySafe: is_family_safe,
             isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
             isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
             isPrivate: player?.videoDetails?.isPrivate ?? false,
             keywords: player?.videoDetails?.keywords ?? [],
-            captions: player?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? null,
-            thumbnails: player?.videoDetails?.thumbnail?.thumbnails ?? [],
-            title: player?.microformat?.playerMicroformatRenderer?.title?.simpleText ?? "",
+            captions: player?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [],
+            thumbnails: thumbnails,
+            title: title,
             views: Number(player?.microformat?.playerMicroformatRenderer?.viewCount ?? 0),
             category: player?.microformat?.playerMicroformatRenderer?.category ?? null,
             owner: {
                 name: player?.videoDetails?.author ?? "",
                 thumbnails: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.thumbnail?.thumbnails || [],
                 verified: (data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.owner?.videoOwnerRenderer?.badges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
-                channelId: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
+                id: player?.microformat?.playerMicroformatRenderer?.externalChannelId ?? null,
                 profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null,
                 followers: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer.owner?.videoOwnerRenderer?.subscriberCountText?.simpleText?.match(/[0-9a-zA-Z\.]+/g)?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1)
             },
@@ -107,7 +111,7 @@ var video = {
             owner: {
                 name: video.shortBylineText.runs[0].text,
                 verified: (video.ownerBadges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
-                channelId: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
+                id: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
             },
         })) ?? [],
             nextVideosToken: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null,
@@ -137,11 +141,11 @@ var video = {
                     nextPage: comment?.replies?.commentRepliesRenderer?.contents?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
                 },
                 likeCount: Number(comment?.comment?.commentRenderer?.voteCount?.simpleText ?? 0),
-                author: {
+                owner: {
                     name: comment?.comment?.commentRenderer?.authorText?.simpleText ?? "", // yt is not providing real name (even you can see the issue in yt's comment section)
-                    isChannelOwner: comment?.comment?.commentRenderer?.authorIsChannelOwner ?? false,
+                    is_video_owner: comment?.comment?.commentRenderer?.authorIsChannelOwner ?? false,
                     thumbnails: comment?.comment?.commentRenderer?.authorThumbnail?.thumbnails ?? [],
-                    channelId: comment?.comment?.commentRenderer?.authorEndpoint?.browseEndpoint?.browseId ?? null,
+                    id: comment?.comment?.commentRenderer?.authorEndpoint?.browseEndpoint?.browseId ?? null,
                     profile: comment?.comment?.commentRenderer?.authorText?.simpleText ?? null
                 }
             })),
