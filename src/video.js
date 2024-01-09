@@ -7,7 +7,7 @@ var video = {
     __n_param_algorithm: null,
     extract_youtube_algorithm: async () => {
         let youtube_main_page = await (await fetch("https://www.youtube.com/")).text();
-        basejs = await (await fetch("https://www.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
+        let basejs = await (await fetch("https://www.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
 
         let signature_cipher = {};
 
@@ -16,7 +16,7 @@ var video = {
         signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[4][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
-        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9]+\)\{var[\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\/\>\<\|\*\?\\]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z]+\.join\(\"\"\)\}/g)[0].slice(1);
+        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9]+\)\{var[\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\/\>\<\|\*\?\\\^]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z]+\.join\(\"\"\)\}/g)[0].slice(1);
 
         video.__signature_cipher = signature_cipher;
         video.is_extracted = true;
@@ -107,7 +107,7 @@ var video = {
             title: video.title.simpleText,
             thumbnails: video.thumbnail.thumbnails,
             views: Number(video.title.accessibility.accessibilityData.label.match(/[0-9\.\,\ ]+view/g)[0].replace(/[A-Za-z\ \.\,]+/g, "")),
-            length: Number(video.lengthSeconds),
+            length: utils.extract_time_from_text(video?.lengthText?.simpleText) ?? null,
             owner: {
                 name: video.shortBylineText.runs[0].text,
                 verified: (video.ownerBadges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
