@@ -20,6 +20,10 @@ var search = {
                 id: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
             },
         }));
+    },
+    get_suggestions: async (query) => {
+        let response = await yt_extractor.utils.get_text(`https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}`);
+        return JSON.parse(response.match(/\(.*\)/g)[0].slice(1,-1))[1].map(a => a[0]);
     }
 }
 
