@@ -2,9 +2,9 @@ const utils = require("./utils");
 
 var trends = {
     get_trends: async () => {
-        let page = await utils.get_text(`https://www.youtube.com/`);
+        let page = await utils.get_text(`https://www.youtube.com/feed/trending?bp=6gQJRkVleHBsb3Jl`);
         let data = utils.extract_json_data_from_page(page, "ytInitialData");
-        let videos = data.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.richGridRenderer.contents.map(a=>a.richItemRenderer?.content?.videoRenderer).filter(a=>a!=undefined);
+        let videos = data.contents.twoColumnBrowseResultsRenderer.tabs[0].tabRenderer.content.sectionListRenderer.contents.map(a=>a.itemSectionRenderer.contents[0].shelfRenderer.content.expandedShelfContentsRenderer.items).reduce((a,b)=>{return [...a, ...b]},[]).map(a=>a.videoRenderer);
         return {
             videos: videos.map(video => ({
                 id: video.videoId,
@@ -18,7 +18,7 @@ var trends = {
                     id: videos?.shortBylineText?.runs?.[0]?.navigationEndpoint?.browseEndpoint?.browseId ?? null
                 },
             })),
-            nextPage: data.contents
+            //nextPage: null
         };
     }
 };
