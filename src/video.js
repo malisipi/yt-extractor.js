@@ -90,6 +90,7 @@ var video = {
             keywords: player?.videoDetails?.keywords ?? [],
             captions: player?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [],
             thumbnails: thumbnails,
+            watermarks: player?.annotations?.[0]?.playerAnnotationsExpandedRenderer?.featuredChannel?.watermark?.thumbnails ?? [],
             title: title,
             views: Number(player?.microformat?.playerMicroformatRenderer?.viewCount ?? 0),
             category: player?.microformat?.playerMicroformatRenderer?.category ?? null,
