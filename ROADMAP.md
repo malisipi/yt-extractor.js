@@ -7,6 +7,7 @@
 - [x] Videos `(?)`
   - [x] Unencrypted Videos
   - [x] Encrypted Videos (Public videos but has signatureCipher instead of pure uri)
+  - [x] Videos about self-harm topics
   - [x] Live Streams
   - [x] Captions `(?)`
   - [x] Next Videos `(?)`
