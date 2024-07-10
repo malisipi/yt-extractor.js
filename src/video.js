@@ -17,6 +17,7 @@ var video = {
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[3][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name.replaceAll("$","\\$")}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
         video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9\.]+\)\{var[\.\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\.\/\>\<\|\*\?\\\^\.]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z\.]+\.join[a-zA-Z\.]+\([a-zA-Z\,\"]+\)\}/g)[0].slice(1);
+        signature_cipher.the_signature = parseInt(basejs.match(/signatureTimestamp\:[0-9]*/g)?.[0].replace(/[a-zA-Z\(\)\.\:]/g,"")) ?? 0;
 
         video.__signature_cipher = signature_cipher;
         video.is_extracted = true;
@@ -45,10 +46,26 @@ var video = {
         }
         return the_url.href;
     },
+    get_real_stream_uri: async (target_uri) => {
+        // It's required when you send too much request to YT
+        // YT would deny give stream from exact uri
+        // The function will return real stream uri
+        const headers = await fetch(target_uri, {method: "HEAD" });
+        if(headers.headers.get("content-type") == "text/plain"){
+            console.warn("YT is trolling the URI.");
+            if(headers.status == 0 || headers.status == 403 || headers.status == 404 || Number(headers.headers.get("content-length")) < 20){
+                console.warn("Failed to extract real stream uri");
+                return null;
+            }
+            let new_uri = await fetch(target_uri);
+            return await video.get_real_stream_uri(await new_uri.text());
+        };
+        return target_uri;
+    },
     __get_video_info_without_age_restriction: async (video_id) => {
         let player = await utils.get_json(`https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false`, {
             method: "POST",
-            body: `{"context":{"client":{"clientName":"TVHTML5_SIMPLY_EMBEDDED_PLAYER","clientVersion":"2.0","clientScreen":"WATCH","hl":"en"},"thirdParty":{"embedUrl":"https://www.youtube.com/"}},"playbackContext":{"contentPlaybackContext":{}},"videoId":"${video_id}","startTimeSecs":0,"racyCheckOk":true,"contentCheckOk":true}`
+            body: `{"context":{"client":{"clientName":"TVHTML5_SIMPLY_EMBEDDED_PLAYER","clientVersion":"2.0","clientScreen":"WATCH","hl":"en"},"thirdParty":{"embedUrl":"https://www.youtube.com/"}},"playbackContext":{"contentPlaybackContext":{"signatureTimestamp":${video.__signature_cipher.the_signature}}},"videoId":"${video_id}","startTimeSecs":0,"racyCheckOk":true,"contentCheckOk":true}`
         }, {
             "Authority": "www.youtube.com",
             "Accept": "*/*",
@@ -63,7 +80,7 @@ var video = {
     },
     get_video: async (video_id) => {
         let page = await utils.get_text(`https://www.youtube.com/watch?v=${encodeURIComponent(video_id)}`);
-        let signature_timestamp = page.match(/\"STS\"\:[0-9]*/g)[0].match(/[0-9]+/g)[0];
+        let signature_timestamp = page.match(/\"STS\"\:[0-9]*/g)[0].match(/[0-9]+/g)[0] || video.__signature_cipher.the_signature;
 
         let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
 
