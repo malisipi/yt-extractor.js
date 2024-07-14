@@ -12,6 +12,7 @@ var owner = {
             name: data?.metadata?.channelMetadataRenderer?.title,
             id: data?.microformat?.microformatDataRenderer?.urlCanonical?.split("/channel/")?.[1] ?? channel_id,
             description: data?.metadata?.channelMetadataRenderer?.description,
+            backgrounds: data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.banner?.imageBannerViewModel?.image?.sources ?? [],
             thumbnails: data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources ?? data?.metadata?.channelMetadataRenderer?.avatar?.thumbnails ?? [],
             videosCount: Number(JSON.stringify(data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.metadata?.contentMetadataViewModel?.metadataRows)?.match(/[0-9\.]+ video/g)?.[0]?.match(/[0-9]+/g)?.[0] ?? 0),
             videos: await owner.get_owner_videos(channel_id),
