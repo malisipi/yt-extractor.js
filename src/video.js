@@ -16,7 +16,7 @@ var video = {
         signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[3][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name.replaceAll("$","\\$")}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
-        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9\.]+\)\{var[\.\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\.\/\>\<\|\*\?\\\^\.]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z\.]+\.join[a-zA-Z\.]+\([a-zA-Z\,\"]+\)\}/g)[0].slice(1);
+        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9\.]+\)\{var[\.\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\'\:\.\/\>\<\|\*\?\\\^\.]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z\.]+\.join[a-zA-Z\.]*\([a-zA-Z\,\"]+\)\}/g)[0].slice(1);
         signature_cipher.the_signature = parseInt(basejs.match(/signatureTimestamp\:[0-9]*/g)?.[0].replace(/[a-zA-Z\(\)\.\:]/g,"")) ?? 0;
 
         video.__signature_cipher = signature_cipher;
