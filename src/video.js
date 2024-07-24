@@ -169,7 +169,7 @@ var video = {
                 id: comment?.payload?.commentEntityPayload?.properties?.commentId ?? null,
                 text: comment?.payload?.commentEntityPayload?.properties?.content?.content ?? "",
                 time: comment?.payload?.commentEntityPayload?.properties?.publishedTime?.replace(" (edited)","") ?? "", // it need to be converted into time
-                isEdited: comment?.payload?.commentEntityPayload?.properties?.publishedTime?.includes("(edited)") ?? false, // I can not found the data where located
+                isEdited: comment?.payload?.commentEntityPayload?.properties?.publishedTime?.includes("(edited)") ?? false,
                 replies: {
                     count: Number(comment?.payload?.commentEntityPayload?.toolbar?.replyCount) ?? 0,
                     nextPage: null // TODO: Find reply page
