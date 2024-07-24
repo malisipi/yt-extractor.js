@@ -161,32 +161,29 @@ var video = {
             body: `{"context":{"client":{"clientName":"WEB","clientVersion":"2.20231117.01.04","platform":"DESKTOP"},"user":{},"request":{"useSsl":true}},"continuation":"${commentsToken}"}`
         });
 
-        let continuationItems = (
-            response?.onResponseReceivedEndpoints?.filter(a=>a?.reloadContinuationItemsCommand?.slot == "RELOAD_CONTINUATION_SLOT_BODY")?.[0]?.reloadContinuationItemsCommand?.continuationItems||
-            response?.onResponseReceivedEndpoints?.[0]?.appendContinuationItemsAction?.continuationItems
-        );
+        let mutations = response.frameworkUpdates.entityBatchUpdate.mutations;
 
         return ({
-            disabled: false,
-            comments: continuationItems?.filter(a => a?.commentThreadRenderer != undefined).map(a => a?.commentThreadRenderer).map(comment => ({
-                id: comment?.comment?.commentRenderer?.commentId ?? null,
-                text: comment?.comment?.commentRenderer?.contentText?.runs?.[0]?.text ?? "",
-                time: comment?.comment?.commentRenderer?.publishedTimeText?.runs?.[0]?.text ?? "", // it need to be converted into time
-                isEdited: (comment?.comment?.commentRenderer?.publishedTimeText?.runs?.[0]?.text?.match(/\([a-zA-Z]+\)/g)?.length ?? 0) > 0,
+            disabled: false, // TODO: Support that
+            comments: mutations.filter(a=>a?.payload?.commentEntityPayload)?.map(comment => ({
+                id: comment?.payload?.commentEntityPayload?.properties?.commentId ?? null,
+                text: comment?.payload?.commentEntityPayload?.properties?.content?.content ?? "",
+                time: comment?.payload?.commentEntityPayload?.properties?.publishedTime?.replace(" (edited)","") ?? "", // it need to be converted into time
+                isEdited: comment?.payload?.commentEntityPayload?.properties?.publishedTime?.includes("(edited)") ?? false, // I can not found the data where located
                 replies: {
-                    count: comment?.comment?.commentRenderer?.replyCount ?? 0,
-                    nextPage: comment?.replies?.commentRepliesRenderer?.contents?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
+                    count: Number(comment?.payload?.commentEntityPayload?.toolbar?.replyCount) ?? 0,
+                    nextPage: null // TODO: Find reply page
                 },
-                likeCount: Number(comment?.comment?.commentRenderer?.voteCount?.simpleText ?? 0),
+                likeCount: Number(comment?.payload?.commentEntityPayload?.toolbar?.likeCountNotliked) ?? 0,
                 owner: {
-                    name: comment?.comment?.commentRenderer?.authorText?.simpleText ?? "", // yt is not providing real name (even you can see the issue in yt's comment section)
-                    is_video_owner: comment?.comment?.commentRenderer?.authorIsChannelOwner ?? false,
-                    thumbnails: comment?.comment?.commentRenderer?.authorThumbnail?.thumbnails ?? [],
-                    id: comment?.comment?.commentRenderer?.authorEndpoint?.browseEndpoint?.browseId ?? null,
-                    profile: comment?.comment?.commentRenderer?.authorText?.simpleText ?? null
+                    name: comment?.payload?.commentEntityPayload?.author?.displayName ?? "", // yt is not providing real name (even you can see the issue in yt's comment section)
+                    isVideoOwner: comment?.payload?.commentEntityPayload?.author?.isCreator ?? false,
+                    thumbnails: comment?.payload?.commentEntityPayload?.avatar?.image?.sources ?? [],
+                    id: comment?.payload?.commentEntityPayload?.author?.channelId ?? null,
+                    isVerified: comment?.payload?.commentEntityPayload?.author?.isVerified ?? false
                 }
             })),
-            nextpage: continuationItems?.filter(a=>a.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
+            nextpage: response?.onResponseReceivedEndpoints?.filter(a=>a?.reloadContinuationItemsCommand?.slot == "RELOAD_CONTINUATION_SLOT_BODY")?.[0]?.reloadContinuationItemsCommand?.continuationItems?.filter(a=>a.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
         });
     }
 };
