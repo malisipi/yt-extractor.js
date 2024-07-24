@@ -16,7 +16,7 @@ var owner = {
             backgrounds: data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.banner?.imageBannerViewModel?.image?.sources ?? [],
             thumbnails: data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.image?.decoratedAvatarViewModel?.avatar?.avatarViewModel?.image?.sources ?? data?.metadata?.channelMetadataRenderer?.avatar?.thumbnails ?? [],
             videosCount: Number(JSON.stringify(data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.metadata?.contentMetadataViewModel?.metadataRows)?.match(/[0-9\.]+ video/g)?.[0]?.match(/[0-9]+/g)?.[0] ?? 0),
-            videos: await playlist.get_playlist(components.tabs.watch.$$response.owner.id.replace("UC","UU")),
+            videos: await playlist.get_playlist(channel_id.replace("UC","UU")),
             followers: JSON.stringify(data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.metadata?.contentMetadataViewModel?.metadataRows)?.match(/[0-9\.KM]+ subscribers/g)?.[0]?.split(" ")?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1) ?? 0,
             verified: !!data?.header?.pageHeaderRenderer?.content?.pageHeaderViewModel?.title?.dynamicTextViewModel?.text?.attachmentRuns?.[0]?.element?.type?.imageType?.image?.sources?.[0]?.clientResource?.imageName
         });
