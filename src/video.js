@@ -107,13 +107,13 @@ var video = {
         let thumbnails = player?.videoDetails?.thumbnail?.thumbnails ?? [];
         if(player?.playabilityStatus?.desktopLegacyAgeGateReason){ // Age-Restricted Videos
             is_family_safe = false;
-            player = await video.__get_video_info_without_age_restriction(video_id);
         };
+        let player_for_streaming_data = await video.__get_video_info_without_age_restriction(video_id);
 
         return ({
-            audioStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? [],
-            videoStreams: player?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? [],
-            relatedStreams: player?.streamingData?.formats ?? [],
+            audioStreams: player_for_streaming_data?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? [],
+            videoStreams: player_for_streaming_data?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? [],
+            relatedStreams: player_for_streaming_data?.streamingData?.formats ?? [],
             dash: player?.streamingData?.dashManifestUrl ?? null,
             description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
