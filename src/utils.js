@@ -1,4 +1,6 @@
+let __client_version = "2.20240718.01.00";
 var utils = {
+    __client_version: __client_version,
     __default_headers: {
         "Accept": "*/*",
         "Cache-Control": "no-cache",
@@ -9,7 +11,7 @@ var utils = {
         "X-Origin": "https://www.youtube.com",
         "X-Youtube-Bootstrap-Logged-In": "false",
         "X-Youtube-Client-Name": "1",
-        "X-Youtube-Client-Version": "2.20231208.01.00",
+        "X-Youtube-Client-Version": __client_version,
     },
     get_text: async (page, fetch_params = {}, headers=utils.__default_headers) => {
         fetch_params.headers = headers;

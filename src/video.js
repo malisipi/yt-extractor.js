@@ -88,7 +88,7 @@ var video = {
                                                                     // If video is about self-harm topics, YouTube will not give the data easily
             player = await utils.get_json(`https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false`, {
                 method: "POST",
-                body: `{"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":"2.20240313.05.00","originalUrl":"https://www.youtube.com/watch?v=${video_id}&pp=QAA%3D&rco=1","configInfo":{},"timeZone":"UTC","utcOffsetMinutes":0,"memoryTotalKbytes":"4000000","clientScreen":"WATCH","mainAppWebInfo":{"graftUrl":"/watch?v=${video_id}&pp=QAA%3D&rco=1"}}},"videoId":"${video_id}","params":"QAA%3D","playbackContext":{"contentPlaybackContext":{"currentUrl":"/watch?v=${video_id}&pp=QAA%3D&rco=1","signatureTimestamp":"${signature_timestamp}","referer":"https://www.youtube.com/watch?v=${video_id}&rco=1","lactMilliseconds":"-1"}},"racyCheckOk":true,"contentCheckOk":true}`
+                body: `{"context":{"client":{"hl":"en","gl":"US","clientName":"WEB","clientVersion":"${utils.__client_version}","originalUrl":"https://www.youtube.com/watch?v=${video_id}&pp=QAA%3D&rco=1","configInfo":{},"timeZone":"UTC","utcOffsetMinutes":0,"memoryTotalKbytes":"4000000","clientScreen":"WATCH","mainAppWebInfo":{"graftUrl":"/watch?v=${video_id}&pp=QAA%3D&rco=1"}}},"videoId":"${video_id}","params":"QAA%3D","playbackContext":{"contentPlaybackContext":{"currentUrl":"/watch?v=${video_id}&pp=QAA%3D&rco=1","signatureTimestamp":"${signature_timestamp}","referer":"https://www.youtube.com/watch?v=${video_id}&rco=1","lactMilliseconds":"-1"}},"racyCheckOk":true,"contentCheckOk":true}`
             }, {
                 "Authority": "www.youtube.com",
                 "Accept": "*/*",
@@ -158,7 +158,7 @@ var video = {
     get_comments: async (commentsToken) => {
         let response = await utils.get_json("https://www.youtube.com/youtubei/v1/next?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false", {
             method: "POST",
-            body: `{"context":{"client":{"clientName":"WEB","clientVersion":"2.20231117.01.04","platform":"DESKTOP"},"user":{},"request":{"useSsl":true}},"continuation":"${commentsToken}"}`
+            body: `{"context":{"client":{"clientName":"WEB","clientVersion":"${utils.__client_version}","platform":"DESKTOP"},"user":{},"request":{"useSsl":true}},"continuation":"${commentsToken}"}`
         });
 
         let mutations = response.frameworkUpdates.entityBatchUpdate.mutations;
