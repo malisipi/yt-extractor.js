@@ -52,7 +52,7 @@ var video = {
         // The function will return real stream uri
         const headers = await fetch(target_uri, {method: "HEAD" });
         if(headers.headers.get("content-type") == "text/plain"){
-            console.warn("YT is trolling the URI.");
+            console.warn("YT is throttling the URI.");
             if(headers.status == 0 || headers.status == 403 || headers.status == 404 || Number(headers.headers.get("content-length")) < 20){
                 console.warn("Failed to extract real stream uri");
                 return null;
@@ -108,7 +108,16 @@ var video = {
         if(player?.playabilityStatus?.desktopLegacyAgeGateReason){ // Age-Restricted Videos
             is_family_safe = false;
         };
-        let player_for_streaming_data = await video.__get_video_info_without_age_restriction(video_id);
+        let player_for_streaming_data = player;
+        if(page.includes("51217476") || page.includes("51217102") // If poToken experiment used - https://github.com/yt-dlp/yt-dlp/commit/8b8b442cb005a8d85315f301615f83fb736b967a#diff-b7b9f6790de4427214b61939432e667d95b929d07fd918b9da1a36d7996cc506R1297
+            || player?.playabilityStatus?.desktopLegacyAgeGateReason){ // If age-gated
+                if(is_family_safe){
+                    console.warn("poToken detected ~ Client will be changed");
+                } else {
+                    console.warn("Not family safe video ~ Client will be changed");
+                }
+                player_for_streaming_data = await video.__get_video_info_without_age_restriction(video_id);
+        };
 
         return ({
             audioStreams: player_for_streaming_data?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? [],
