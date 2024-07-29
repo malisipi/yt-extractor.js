@@ -130,7 +130,6 @@ var video = {
             likes: Number(data.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[0]?.videoPrimaryInfoRenderer?.videoActions?.menuRenderer?.topLevelButtons?.[0]?.segmentedLikeDislikeButtonViewModel?.likeButtonViewModel?.likeButtonViewModel?.toggleButtonViewModel?.toggleButtonViewModel?.defaultButtonViewModel?.buttonViewModel?.accessibilityText?.replace(/[\.\,]/g,"")?.match(/[0-9]+/g)?.[0] ?? 0),
             isFamilySafe: is_family_safe,
             isUnlisted: player?.microformat?.playerMicroformatRenderer?.isUnlisted ?? false,
-            isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
             isPrivate: player?.videoDetails?.isPrivate ?? false,
             keywords: player?.videoDetails?.keywords ?? [],
             captions: player?.captions?.playerCaptionsTracklistRenderer?.captionTracks ?? [],
@@ -147,19 +146,24 @@ var video = {
                 profile: player?.microformat?.playerMicroformatRenderer?.ownerProfileUrl ?? null,
                 followers: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer.owner?.videoOwnerRenderer?.subscriberCountText?.simpleText?.match(/[0-9a-zA-Z\.]+/g)?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1) ?? 0
             },
+            playability: {
+                isLiveNow: player?.microformat?.playerMicroformatRenderer?.liveBroadcastDetails?.isLiveNow ?? false,
+                isLive: player?.playabilityStatus?.status?.includes("LIVE_STREAM") ?? false, // may be planned stream
+                streamTime: new Date(Number(player?.playabilityStatus?.liveStreamability?.liveStreamabilityRenderer?.offlineSlate?.liveStreamOfflineSlateRenderer?.scheduledStartTime ?? 0)*1000)
+            },
             cards: data?.cards?.cardCollectionRenderer?.cards ?? null,
             nextVideos: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.compactVideoRenderer!=undefined).map(a=>a?.compactVideoRenderer).map(video => ({
-            id: video.videoId,
-            title: video.title.simpleText,
-            thumbnails: video.thumbnail.thumbnails,
-            views: Number(video.title.accessibility.accessibilityData.label.match(/[0-9\.\,\ ]+view/g)[0].replace(/[A-Za-z\ \.\,]+/g, "")),
-            length: utils.extract_time_from_text(video?.lengthText?.simpleText) ?? null,
-            owner: {
-                name: video.shortBylineText.runs[0].text,
-                verified: (video.ownerBadges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
-                id: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
-            },
-        })) ?? [],
+                id: video.videoId,
+                title: video.title.simpleText,
+                thumbnails: video.thumbnail.thumbnails,
+                views: Number(video.title.accessibility.accessibilityData.label.match(/[0-9\.\,\ ]+view/g)[0].replace(/[A-Za-z\ \.\,]+/g, "")),
+                length: utils.extract_time_from_text(video?.lengthText?.simpleText) ?? null,
+                owner: {
+                    name: video.shortBylineText.runs[0].text,
+                    verified: (video.ownerBadges?.filter(a=>a.metadataBadgeRenderer?.style?.includes("VERIFIED")).length ?? 0) > 0,
+                    id: video.shortBylineText.runs[0].navigationEndpoint.commandMetadata.webCommandMetadata.url.replace("/channel/","")
+                },
+            })) ?? [],
             nextVideosToken: data?.contents?.twoColumnWatchNextResults?.secondaryResults?.secondaryResults?.results?.filter(a=>a?.continuationItemRenderer!=undefined)?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null,
             commentsToken: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[3]?.itemSectionRenderer?.contents?.[0]?.continuationItemRenderer?.continuationEndpoint?.continuationCommand?.token ?? null
         });
@@ -170,11 +174,11 @@ var video = {
             body: `{"context":{"client":{"clientName":"WEB","clientVersion":"${utils.__client_version}","platform":"DESKTOP"},"user":{},"request":{"useSsl":true}},"continuation":"${commentsToken}"}`
         });
 
-        let mutations = response.frameworkUpdates.entityBatchUpdate.mutations;
+        let mutations = response?.frameworkUpdates?.entityBatchUpdate?.mutations ?? null;
 
         return ({
             disabled: false, // TODO: Support that
-            comments: mutations.filter(a=>a?.payload?.commentEntityPayload)?.map(comment => ({
+            comments: mutations?.filter(a=>a?.payload?.commentEntityPayload)?.map(comment => ({
                 id: comment?.payload?.commentEntityPayload?.properties?.commentId ?? null,
                 text: comment?.payload?.commentEntityPayload?.properties?.content?.content ?? "",
                 time: comment?.payload?.commentEntityPayload?.properties?.publishedTime?.replace(" (edited)","") ?? "", // it need to be converted into time
