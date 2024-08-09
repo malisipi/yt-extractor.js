@@ -1,4 +1,5 @@
 const vm = require("vm");
+// vm.runInNewContext = (a)=>{console.warn(a);return eval(a);}; // It's useful to debug runInContext bugs, don't use in prod, it's unsafe
 const utils = require("./utils");
 
 var video = {
@@ -12,7 +13,7 @@ var video = {
         let signature_cipher = {};
 
         signature_cipher.main_decoder = basejs.split("\n").filter(a => a.includes("alr") && a.includes("encodeURIComponent") && a.includes("decodeURIComponent"))[0];
-        signature_cipher.main_decoder_name = signature_cipher.main_decoder.match(/\=[a-zA-Z]+\(/g)?.at(-1)?.slice(1,-1);
+        signature_cipher.main_decoder_name = signature_cipher.main_decoder.match(/\&\&[a-zA-Z\$\(]+\=[a-zA-Z\$]+\(decodeURIComponent/g)[0].split("=")[1].split("(")[0];
         signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[3][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name.replaceAll("$","\\$")}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
