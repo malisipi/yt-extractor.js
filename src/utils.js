@@ -1,4 +1,4 @@
-let __client_version = "2.20240718.01.00";
+let __client_version = "2.20241025.01.00";
 var utils = {
     __client_version: __client_version,
     __default_headers: {
