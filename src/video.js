@@ -7,8 +7,8 @@ var video = {
     __signature_cipher: null,
     __n_param_algorithm: null,
     extract_youtube_algorithm: async () => {
-        let youtube_main_page = await (await fetch("https://www.youtube.com/")).text();
-        let basejs = await (await fetch("https://www.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
+        let youtube_main_page = await (await fetch("https://m.youtube.com/")).text();
+        let basejs = await (await fetch("https://m.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
 
         let signature_cipher = {};
 
@@ -17,7 +17,8 @@ var video = {
         signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
         signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[3][0];
         signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name.replaceAll("$","\\$")}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
-        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9\.]+\)\{var[\.\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\_\'\:\.\/\>\<\|\*\?\\\^\.]+\_except\_[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z\.]+\.join[a-zA-Z\.]*\([a-zA-Z\,\"\(\)]+\)\}/g)[0].slice(1);
+        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9\.]+\)\{var[\.\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\_\'\:\.\/\>\<\|\*\?\\\^\.]+[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z\.]+\.join[a-zA-Z\.]*\([a-zA-Z\,\"\(\)]+\)\}/g)[0].slice(1);
+        video.__n_param_algorithm = video.__n_param_algorithm.replace(/\;\s*if\s*\(\s*typeof\s+[a-zA-Z0-9\_\$]+\s*[\=]{2,3}\s*[\"\']*undefined[\"\']*\s*\)\s*return\s+[a-zA-Z0-9\_\$]+\;/g, ";"); // Patch n param algorithm to bypass type validations
         signature_cipher.the_signature = parseInt(basejs.match(/signatureTimestamp\:[0-9]*/g)?.[0].replace(/[a-zA-Z\(\)\.\:]/g,"")) ?? 0;
 
         video.__signature_cipher = signature_cipher;
