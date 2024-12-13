@@ -1,8 +1,21 @@
 const utils = require("./utils");
-const { execSync } = require('child_process');
+const { exec, execSync } = require('child_process');
+const fs = require("fs");
 
 var video = {
     is_extracted: true,
+    get_ready: async () => {
+        if(navigator.userAgentData.platform == "Windows"){
+            try {
+                await fs.stat("yt-dlp.exe");
+                console.warn("Updating yt-dlp.exe");
+                exec("yt-dlp.exe -U");
+            } catch(e) {
+                console.warn("Downloading yt-dlp.exe");
+                exec("curl -LO https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe");
+            };
+        };
+    },
     get_streams: (video_id) => {
         let stdout = execSync(`yt-dlp --dump-json "https://www.youtube.com/watch?v=${video_id.replace(/[\$\\\`\#\?\&]/g,'')}"`);
         return JSON.parse(String(stdout));
