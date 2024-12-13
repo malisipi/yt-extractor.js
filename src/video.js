@@ -1,102 +1,16 @@
-const vm = require("vm");
-// vm.runInNewContext = (a)=>{console.warn(a);return eval(a);}; // It's useful to debug runInContext bugs, don't use in prod, it's unsafe
 const utils = require("./utils");
+const { execSync } = require('child_process');
 
 var video = {
-    is_extracted: false,
-    __signature_cipher: null,
-    __n_param_algorithm: null,
-    extract_youtube_algorithm: async () => {
-        let youtube_main_page = await (await fetch("https://m.youtube.com/")).text();
-        let basejs = await (await fetch("https://m.youtube.com" + youtube_main_page.match(/[a-zA-Z0-9\/\.\_\-]*base\.js/g)[0])).text();
-
-        let signature_cipher = {};
-
-        signature_cipher.main_decoder = basejs.split("\n").filter(a => a.includes("alr") && a.includes("encodeURIComponent") && a.includes("decodeURIComponent"))[0];
-        signature_cipher.main_decoder_name = signature_cipher.main_decoder.match(/\&\&[a-zA-Z\$\(]+\=[a-zA-Z\$]+\(decodeURIComponent/g)[0].split("=")[1].split("(")[0];
-        signature_cipher.core_decoder = basejs.split("\n").filter(a=>a.includes(`${signature_cipher.main_decoder_name}=`))[0];
-        signature_cipher.core_decoder_helper_name = signature_cipher.core_decoder.split(";").map(e=>e.split("."))[3][0];
-        signature_cipher.core_decoder_helper = basejs.match(RegExp(`var\\ ${signature_cipher.core_decoder_helper_name.replaceAll("$","\\$")}\\=[a-zA-Z0-9\\;\\:\\,\\{\\}\\;\\(\\)\\n\\.\\ \\=\\[\\]\\%]{0,150}\\}\\}\\;`))[0];
-        video.__n_param_algorithm = basejs.match(/\=function\([a-zA-Z0-9\.]+\)\{var[\.\sa-zA-Z\=]+\.split[a-zA-Z\=\.\[\]\+\&\(\)\"\,\{\}0-9\!\%\;\s\n\-\_\'\:\.\/\>\<\|\*\?\\\^\.]+[a-zA-Z0-9\-\_\n\"\+\}]+[\sA-Za-z\.]+\.join[a-zA-Z\.]*\([a-zA-Z\,\"\(\)]+\)\}/g)[0].slice(1);
-        video.__n_param_algorithm = video.__n_param_algorithm.replace(/\;\s*if\s*\(\s*typeof\s+[a-zA-Z0-9\_\$]+\s*[\=]{2,3}\s*[\"\']*undefined[\"\']*\s*\)\s*return\s+[a-zA-Z0-9\_\$]+\;/g, ";"); // Patch n param algorithm to bypass type validations
-        signature_cipher.the_signature = parseInt(basejs.match(/signatureTimestamp\:[0-9]*/g)?.[0].replace(/[a-zA-Z\(\)\.\:]/g,"")) ?? 0;
-
-        video.__signature_cipher = signature_cipher;
-        video.is_extracted = true;
-    },
-    __run_signature_cipher_algotithm: (signature) => {
-        let context = `${video.__signature_cipher.core_decoder_helper};${video.__signature_cipher.core_decoder};${video.__signature_cipher.main_decoder_name}("${signature}");`
-        return vm.runInNewContext(context);
-    },
-    solve_signature_cipher: (signature) => {
-        let decoded_signature = decodeURIComponent(signature);
-        let solved_signature = video.__run_signature_cipher_algotithm(decoded_signature);
-        let encoded_signature = encodeURIComponent(solved_signature);
-        return encoded_signature;
-    },
-    solve_signature_cipher_url: (url) => {
-        splitted_url = new URLSearchParams(url);
-        return decodeURIComponent(splitted_url.get("url")) + "&alr=yes&sig=" + video.solve_signature_cipher(splitted_url.get("s"));
-    },
-    solve_n_param: (url) => {
-        let the_url = new URL(url);
-        let n_param = the_url.searchParams.get("n");
-        if(n_param != null) {
-            let context = `(${video.__n_param_algorithm})("${n_param}");`
-            let the_result = vm.runInNewContext(context);
-            the_url.searchParams.set("n", the_result);
-        }
-        return the_url.href;
-    },
-    get_real_stream_uri: async (target_uri) => {
-        // It's required when you send too much request to YT
-        // YT would deny give stream from exact uri
-        // The function will return real stream uri
-        const headers = await fetch(target_uri, {method: "HEAD" });
-        if(headers.headers.get("content-type") == "text/plain"){
-            console.warn("YT is throttling the URI.");
-            if(headers.status == 0 || headers.status == 403 || headers.status == 404 || Number(headers.headers.get("content-length")) < 20){
-                console.warn("Failed to extract real stream uri");
-                return null;
-            }
-            let new_uri = await fetch(target_uri);
-            return await video.get_real_stream_uri(await new_uri.text());
-        };
-        return target_uri;
-    },
-    __get_video_info_without_age_restriction: async (video_id) => {
-        let player = await utils.get_json(`https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false`, {
-            method: "POST",
-            body: `{"context":{"client":{"clientName":"TVHTML5_SIMPLY_EMBEDDED_PLAYER","clientVersion":"2.0","clientScreen":"WATCH","hl":"en"},"thirdParty":{"embedUrl":"https://www.youtube.com/"}},"playbackContext":{"contentPlaybackContext":{"signatureTimestamp":${video.__signature_cipher.the_signature}}},"videoId":"${video_id}","startTimeSecs":0,"racyCheckOk":true,"contentCheckOk":true}`
-        }, {
-            "Authority": "www.youtube.com",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Cache-Control": "no-cache",
-            "Content-Type": "text/plain;charset=UTF-8",
-            "Origin": "https://www.youtube.com",
-            "Pragma": "no-cache"
-        });
-
-        return player;
+    is_extracted: true,
+    get_streams: (video_id) => {
+        let stdout = execSync(`yt-dlp --dump-json "https://www.youtube.com/watch?v=${video_id.replace(/[\$\\\`\#\?\&]/g,'')}"`);
+        return JSON.parse(String(stdout));
     },
     get_video: async (video_id) => {
         let page = await utils.get_text(`https://www.youtube.com/watch?v=${encodeURIComponent(video_id)}`);
         let signature_timestamp = page.match(/\"STS\"\:[0-9]*/g)[0].match(/[0-9]+/g)[0] || video.__signature_cipher.the_signature;
         let player = utils.extract_json_data_from_page(page, "ytInitialPlayerResponse");
-
-        let mplayer = await utils.get_json(`https://www.youtube.com/youtubei/v1/player?key=AIzaSyAO_FJ2SlqU8Q4STEHLGCilw_Y9_11qcW8&prettyPrint=false`, {
-            method: "POST",
-            body: `{"context":{"client":{"hl":"en","gl":"US","clientName":"MWEB","clientVersion":"${utils.__client_version}","originalUrl":"https://www.youtube.com/watch?v=${video_id}&pp=QAA%3D&rco=1","configInfo":{},"timeZone":"UTC","utcOffsetMinutes":0,"memoryTotalKbytes":"4000000","clientScreen":"WATCH","mainAppWebInfo":{"graftUrl":"/watch?v=${video_id}&pp=QAA%3D&rco=1"}}},"videoId":"${video_id}","params":"QAA%3D","playbackContext":{"contentPlaybackContext":{"currentUrl":"/watch?v=${video_id}&pp=QAA%3D&rco=1","signatureTimestamp":"${signature_timestamp}","referer":"https://www.youtube.com/watch?v=${video_id}&rco=1","lactMilliseconds":"-1"}},"racyCheckOk":true,"contentCheckOk":true}`
-        }, {
-            "Authority": "www.youtube.com",
-            "Accept": "*/*",
-            "Accept-Language": "en-US,en;q=0.5",
-            "Cache-Control": "no-cache",
-            "Content-Type": "text/plain;charset=UTF-8",
-            "Origin": "https://www.youtube.com",
-            "Pragma": "no-cache"
-        });
 
         if (!player.streamingData || player.streamingData == []) { // If streamingData is not gived directly; request to endpoint to get data
                                                                     // If video is about self-harm topics, YouTube will not give the data easily
@@ -122,15 +36,17 @@ var video = {
         if(player?.playabilityStatus?.desktopLegacyAgeGateReason){ // Age-Restricted Videos
             is_family_safe = false;
         };
-        let player_for_streaming_data = mplayer;
-        if(player?.playabilityStatus?.desktopLegacyAgeGateReason){ // If age-gated
-            player_for_streaming_data = await video.__get_video_info_without_age_restriction(video_id);
-        };
+
+        let streams = video.get_streams(video_id);
 
         return ({
-            audioStreams: player_for_streaming_data?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("audio")) ?? [],
-            videoStreams: player_for_streaming_data?.streamingData?.adaptiveFormats?.filter(a=>a.mimeType.includes("video")) ?? [],
-            relatedStreams: player_for_streaming_data?.streamingData?.formats ?? [],
+            audioStreams: streams.formats.filter(a=>a.acodec != "none" && a.vcodec == "none" && !a.url.endsWith(".m3u8")).map(a=>({
+                url:a.url,
+                audioTrack:(a.format_note.includes(","))?({displayName:a.format_note.split(",")[0]}):null,
+                bitrate: a.abr*1000, mimeType:a.acodec
+            })),
+            videoStreams: streams.formats.filter(a=>a.vcodec != "none" && a.acodec == "none" && !a.url.endsWith(".m3u8")).map(a=>({url:a.url, mimeType:a.ext, qualityLabel:a.format_note})),
+            relatedStreams: streams.formats.filter(a=>a.acodec != "none" && a.vcodec != "none" && !a.url.endsWith(".m3u8")),
             dash: player?.streamingData?.dashManifestUrl ?? null,
             description: data?.contents?.twoColumnWatchNextResults?.results?.results?.contents?.[1]?.videoSecondaryInfoRenderer?.attributedDescription?.content ?? "",
             length: Number(player?.microformat?.playerMicroformatRenderer?.lengthSeconds ?? 0),
