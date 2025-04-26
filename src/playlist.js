@@ -10,7 +10,7 @@ var playlist = {
             id: video?.videoId ?? null,
             title: video?.title?.runs?.[0]?.text ?? "",
             thumbnails: video?.thumbnail?.thumbnails ?? [],
-            views: Number(video?.title?.accessibility?.accessibilityData?.label?.match(/[0-9\.\,\ ]+view/g)[0].replace(/[A-Za-z\ \.\,]+/g, "") ?? 0),
+            views: Number(video?.shortViewCountText?.accessibility?.accessibilityData?.label?.replace(" million", "M")?.match(/[0-9a-zA-Z\.]+/g)?.[0]?.replace("K"," 1000")?.replace("M", " 1000000")?.split(" ")?.reduce((total, current) => {return total*Number(current)},1) ?? 0),
             length: Number(video?.lengthSeconds ?? 0),
             owner: {
                 name: video?.shortBylineText?.runs?.[0]?.text ?? "",
